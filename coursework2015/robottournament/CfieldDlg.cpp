@@ -307,7 +307,17 @@ void CfieldDlg::Play()
 				int newy = paintDlg.robots[actingRobot]->newy;
 				int curobj = paintDlg.matrix[newx][newy];
 				if (curobj == OBJ_CHARGER)
+				{
 					paintDlg.robots[actingRobot]->newE += paintDlg.FieldParameters.dE;
+					for (int i=0; i<paintDlg.FieldParameters.rivals; i++)
+					{
+						if (i != actingRobot && !paintDlg.robots[i]->alive && paintDlg.robots[i]->x == newx && paintDlg.robots[i]->y == newy) 
+						{
+							curobj = OBJ_DEAD;
+							break;
+						}
+					}
+				}
 				if (curobj == OBJ_TECH)
 					paintDlg.robots[actingRobot]->newL += paintDlg.FieldParameters.dL;
 				if (curobj == OBJ_DEAD)
@@ -370,7 +380,8 @@ void CfieldDlg::Play()
 				if (paintDlg.robots[i]->killed || paintDlg.robots[i]->E<=0)
 				{
 					paintDlg.robots[i]->alive = false;
-					paintDlg.matrix[paintDlg.robots[i]->x][paintDlg.robots[i]->y] = OBJ_DEAD;
+					if (paintDlg.matrix[paintDlg.robots[i]->x][paintDlg.robots[i]->y] == i || paintDlg.matrix[paintDlg.robots[i]->x][paintDlg.robots[i]->y] == SEVERAL)
+						paintDlg.matrix[paintDlg.robots[i]->x][paintDlg.robots[i]->y] = OBJ_DEAD;
 					for (int j = 0; j < paintDlg.FieldParameters.rivals; j++)	//призы убийцам
 					{
 						if (paintDlg.robots[i]->attackedBy[j])
