@@ -26,7 +26,6 @@ public:
 	CPaintDlg paintDlg;
 	CString *Dlls;
 	int actingRobot;
-	int aliveRobots;
 	void Play();
 	step **history;
 	afx_msg void OnBnClickedOk();
@@ -55,5 +54,10 @@ public:
 	CString path;
 	int players;
 	int *finalStandings;
+	int aliveRobots;
+	int deadPoints;
+	int rndmin;
+	int rndmax;
+	afx_msg void OnLbnDblclkList1();
 };
 

@@ -27,6 +27,7 @@ IMPLEMENT_DYNAMIC(CfieldDlg, CDialogEx)
 	, stepNumber(0)
 	, infoLock(-1)
 	, rkills(0)
+	, aliveRobots(0)
 {
 }
 
@@ -57,6 +58,7 @@ void CfieldDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT8, rV);
 	DDX_Text(pDX, IDC_EDIT9, stepNumber);
 	DDX_Text(pDX, IDC_EDIT10, rkills);
+	DDX_Text(pDX, IDC_EDIT11, aliveRobots);
 }
 
 
@@ -71,6 +73,7 @@ BEGIN_MESSAGE_MAP(CfieldDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_RIGHTBTN, &CfieldDlg::OnBnClickedRightbtn)
 	ON_BN_CLICKED(IDC_BUTTON2, &CfieldDlg::OnBnClickedButton2)
 	ON_LBN_SELCHANGE(IDC_LIST1, &CfieldDlg::OnLbnSelchangeList1)
+	ON_LBN_DBLCLK(IDC_LIST1, &CfieldDlg::OnLbnDblclkList1)
 END_MESSAGE_MAP()
 
 
@@ -80,8 +83,9 @@ END_MESSAGE_MAP()
 void CfieldDlg::OnBnClickedOk()
 {
 	// TODO: добавьте свой код обработчика уведомлений
-	AfxGetMainWnd()->DestroyWindow();
-	CDialogEx::OnOK();
+	//AfxGetMainWnd()->DestroyWindow();
+	//CDialogEx::OnOK();
+	OnClose();
 }
 
 void CfieldDlg::OnPaint()
@@ -102,9 +106,11 @@ UINT thread(LPVOID pParam)
 
 void CfieldDlg::Play()
 {
+	ofstream prot("AttacksProtocol.txt");
 	while (stepNumber < paintDlg.FieldParameters.N && aliveRobots > 1)
 	{
 		stepNumber++;
+		prot << "Шаг " << stepNumber <<":\n";
 		stepinfo *Stepinfo = new stepinfo;
 		Stepinfo->stepnum = stepNumber;
 		Stepinfo->robots = new robotinfo*[paintDlg.FieldParameters.rivals];
@@ -235,13 +241,17 @@ void CfieldDlg::Play()
 													victim = j;
 													paintDlg.robots[actingRobot]->newE -= paintDlg.FieldParameters.dEa;
 													paintDlg.robots[victim]->newE -= paintDlg.FieldParameters.dEp;
-													srand(time(0));
-													double rnd = rand() % (int)(paintDlg.FieldParameters.rndmax*100+1) + paintDlg.FieldParameters.rndmin*100;
+													srand(time(0)^(rand()%100));
+													double rnd = rand() % (rndmax-rndmin) + rndmin;
 													rnd /= 100;
 													double A = rnd*paintDlg.robots[actingRobot]->A*paintDlg.robots[actingRobot]->E/paintDlg.FieldParameters.Emax;
 													double P = (1-rnd)*paintDlg.robots[victim]->P*paintDlg.robots[victim]->E/paintDlg.FieldParameters.Emax;
 													paintDlg.robots[victim]->attackedBy[actingRobot] = true;	//пишем, что роботы атаковали друг друга
 													paintDlg.robots[actingRobot]->attackedBy[victim] = true;
+													prot <<
+														paintDlg.robots[actingRobot]->name << " (x = " << curx << ", y = " << cury << ", A = " << paintDlg.robots[actingRobot]->A << ", P = " << paintDlg.robots[actingRobot]->P << ", V = " << paintDlg.robots[actingRobot]->V << ", E = " << paintDlg.robots[actingRobot]->E <<") атаковал " << 
+														paintDlg.robots[victim]->name << " (x = " << paintDlg.robots[victim]->x << ", y = " << paintDlg.robots[victim]->y << ", A = " << paintDlg.robots[victim]->A << ", P = " << paintDlg.robots[victim]->P << ", V = " << paintDlg.robots[victim]->V << ", E = " << paintDlg.robots[actingRobot]->E <<
+														") с RND = " << rnd;
 													if (A > P)	//удачная атака
 													{
 														if (paintDlg.robots[victim]->newP > 0 && paintDlg.robots[victim]->P > 0)
@@ -251,6 +261,7 @@ void CfieldDlg::Play()
 														}
 														else
 															paintDlg.robots[victim]->newE -= abs(P - A)*paintDlg.FieldParameters.Emax/paintDlg.FieldParameters.Lmax;
+														prot << " - УСПЕХ (newP = " << paintDlg.robots[victim]->newP << ", newE = " << paintDlg.robots[victim]->newE << ")\n";
 													}
 													else    //неудачная атака
 													{
@@ -261,6 +272,7 @@ void CfieldDlg::Play()
 														}
 														else
 															paintDlg.robots[actingRobot]->newE -= abs(P - A)*paintDlg.FieldParameters.Emax/paintDlg.FieldParameters.Lmax;
+														prot << " - НЕУДАЧА (newA = " << paintDlg.robots[actingRobot]->newA << ", newE = " << paintDlg.robots[actingRobot]->newE << ")\n";
 													}
 													if (paintDlg.robots[victim]->newE <= 0)	//проверка убийства
 														paintDlg.robots[victim]->killed = true;
@@ -426,7 +438,7 @@ void CfieldDlg::Play()
 		if (paintDlg.robots[i]->alive)
 			paintDlg.robots[i]->points = paintDlg.robots[i]->newE + paintDlg.robots[i]->kills*paintDlg.FieldParameters.K;
 		else
-			paintDlg.robots[i]->points = paintDlg.robots[i]->stepsAlive - paintDlg.FieldParameters.N;
+			paintDlg.robots[i]->points = paintDlg.robots[i]->stepsAlive + deadPoints*paintDlg.robots[i]->kills*paintDlg.FieldParameters.K/2- paintDlg.FieldParameters.N - paintDlg.FieldParameters.K*paintDlg.FieldParameters.rivals;
 	}
 	Sort();
 	string results = "Место    Имя                     Статус    Убил   Очки\n";
@@ -447,17 +459,19 @@ void CfieldDlg::Play()
 		else if (paintDlg.robots[id]->killed)
 		{
 			status = "Убит    ";
-			paintDlg.robots[id]->points += paintDlg.FieldParameters.N;
+			paintDlg.robots[id]->points += paintDlg.FieldParameters.N + paintDlg.FieldParameters.K*paintDlg.FieldParameters.rivals;
 		}
 		else
 		{
 			status = "Умер   ";
-			paintDlg.robots[id]->points += paintDlg.FieldParameters.N;
+			paintDlg.robots[id]->points += paintDlg.FieldParameters.N + paintDlg.FieldParameters.K*paintDlg.FieldParameters.rivals;
 		}
 		results += to_string(i+1) + space1 + paintDlg.robots[id]->name.GetString() + space2 + status + "   " + to_string(paintDlg.robots[id]->kills) + "           "  + to_string(paintDlg.robots[id]->points) + "\n";
 	}
+	prot << "\nБИТВА ЗАВЕРШЕНА\n" << results.c_str();
+	prot.close();
 	MessageBox(results.c_str(),"Результаты раунда");
-	int opt = MessageBox("Обновить роботов во входном списке?","Очень важный вопрос",MB_YESNO | MB_ICONQUESTION);
+	int opt = MessageBox("Обновить роботов во входном списке?","Следующий раунд",MB_YESNO | MB_ICONQUESTION);
 	if (opt == IDYES)
 	{
 		ofstream List(path);
@@ -543,13 +557,11 @@ void CfieldDlg::OnBnClickedButton1()
 		for (int j = 0; j < paintDlg.FieldParameters.rivals; j++)
 			paintDlg.robots[i]->attackedBy[j] = false;
 	}
-	//UpdateData(false);
 	UpdateWindow();
 	paintDlg.cameraLock = -1;
 	aliveRobots = paintDlg.FieldParameters.rivals;
 	stepNumber = 0;
 	paintDlg.DrawRobots();
-	//paintDlg.UpdateWindow();
 	Play();	
 }
 
@@ -643,4 +655,9 @@ void CfieldDlg::Sort()
 			}
 		}
 	}
+}
+
+void CfieldDlg::OnLbnDblclkList1()
+{
+	OnBnClickedButton2();
 }

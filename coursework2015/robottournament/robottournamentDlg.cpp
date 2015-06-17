@@ -99,6 +99,7 @@ void CrobottournamentDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT19, rndmin);
 	DDX_Text(pDX, IDC_EDIT20, rndmax);
 	DDX_Text(pDX, IDC_EDIT21, K);
+	DDX_Control(pDX, IDC_CHECK1, m_DeadBonus);
 }
 
 BEGIN_MESSAGE_MAP(CrobottournamentDlg, CDialogEx)
@@ -143,6 +144,7 @@ BOOL CrobottournamentDlg::OnInitDialog()
 
 	// TODO: добавьте дополнительную инициализацию
 	robotsNumber = 0;
+	m_DeadBonus.SetCheck(BST_CHECKED);
 
 	return TRUE;  // возврат значени€ TRUE, если фокус не передан элементу управлени€
 }
@@ -211,6 +213,13 @@ void CrobottournamentDlg::OnBnClickedOk()
 		AfxMessageBox("–оботы не загружены");
 	else
 	{
+		if (m_DeadBonus.GetCheck() == BST_CHECKED)
+			Field.deadPoints = 1;
+		else
+			Field.deadPoints = 0;
+		Field.rndmin = rndmin*100;
+		Field.rndmax = rndmax*100 + 1;
+
 		Data.fieldHeight = fieldHeight;
 		Data.fieldWidth = fieldWidth;
 		Data.rivals = robotsNumber;

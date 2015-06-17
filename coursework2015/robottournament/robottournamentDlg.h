@@ -5,6 +5,7 @@
 #pragma once
 //#include "Parameters.h"
 #include "CfieldDlg.h"
+#include "afxwin.h"
 
 using namespace std;
 
@@ -60,6 +61,7 @@ public:
 	double rndmin;
 	double rndmax;
 	int K;
+	CButton m_DeadBonus;
 };
 
 
