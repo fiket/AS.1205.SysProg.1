@@ -3,6 +3,7 @@
 #include "Parameters.h"
 #include "PaintDlg.h"
 #include "afxwin.h"
+#include <fstream>
 
 using namespace std;
 // диалоговое окно CfieldDlg
@@ -41,7 +42,7 @@ public:
 	CButton m_StartButton;
 	int rx;
 	int ry;
-	int rE;
+	CString rE;
 	int rL;
 	int rA;
 	int rP;
@@ -59,5 +60,12 @@ public:
 	int rndmin;
 	int rndmax;
 	afx_msg void OnLbnDblclkList1();
+	CButton m_upbutton;
+	CButton m_rightbutton;
+	CButton m_downbutton;
+	CButton m_leftbutton;
+	CButton m_lockbutton;
+	bool log;
+	ofstream prot;
 };
 

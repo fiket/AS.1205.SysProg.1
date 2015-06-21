@@ -100,6 +100,7 @@ void CrobottournamentDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT20, rndmax);
 	DDX_Text(pDX, IDC_EDIT21, K);
 	DDX_Control(pDX, IDC_CHECK1, m_DeadBonus);
+	DDX_Control(pDX, IDC_CHECK2, m_log);
 }
 
 BEGIN_MESSAGE_MAP(CrobottournamentDlg, CDialogEx)
@@ -145,6 +146,7 @@ BOOL CrobottournamentDlg::OnInitDialog()
 	// TODO: добавьте дополнительную инициализацию
 	robotsNumber = 0;
 	m_DeadBonus.SetCheck(BST_CHECKED);
+	m_log.SetCheck(BST_CHECKED);
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
@@ -204,7 +206,6 @@ void CrobottournamentDlg::OnBnClickedOk()
 {
 	// TODO: добавьте свой код обработчика уведомлений
 	
-	//data *Data = new data;
 	UpdateData();
 	CountRobots();
 	if (fieldHeight < fieldSide || fieldWidth < fieldSide)
@@ -217,6 +218,10 @@ void CrobottournamentDlg::OnBnClickedOk()
 			Field.deadPoints = 1;
 		else
 			Field.deadPoints = 0;
+		if (m_log.GetCheck() == BST_CHECKED)
+			Field.log = true;
+		else
+			Field.log = false;
 		Field.rndmin = rndmin*100;
 		Field.rndmax = rndmax*100 + 1;
 

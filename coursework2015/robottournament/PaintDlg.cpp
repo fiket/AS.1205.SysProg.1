@@ -29,14 +29,6 @@ CPaintDlg::CPaintDlg(CWnd* pParent /*=NULL*/)
 
 CPaintDlg::~CPaintDlg()
 {
-	/*for (int i=0;i<FieldParameters.fieldWidth;i++)
-		delete matrix[i];
-	delete matrix;
-	for (int i=0;i<FieldParameters.rivals;i++)
-		delete robots[i];
-		//FreeLibrary(robots[i].Library);
-			//delete robots[i].Library;
-	delete robots;*/
 }
 
 void CPaintDlg::DoDataExchange(CDataExchange* pDX)
@@ -57,9 +49,7 @@ END_MESSAGE_MAP()
 void CPaintDlg::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
-	//CRect DrawArea;
 	GetClientRect(&DrawArea);
-	//double fieldRight = DrawArea.bottom;
 	DrawArea.right = DrawArea.bottom;
 	double xcoor = DrawArea.left;
 	double ycoor = DrawArea.top;
@@ -77,18 +67,6 @@ void CPaintDlg::OnPaint()
 		dc.LineTo(DrawArea.bottom,ycoor);
 		ycoor+=DrawArea.bottom/n;
 	}
-	//карта
-	/*dc.SelectObject(&MapPen1);
-	double mapLeft = fieldRight + 50;
-	double mapRight = DrawArea.right - 50;
-	double mapTop = DrawArea.top + 50;
-	double mapBottom = DrawArea.bottom/2;
-	if (ratio <= 1)
-		mapRight = mapLeft + (mapRight - mapLeft)*ratio;
-	else
-		mapBottom = mapTop + (mapBottom - mapTop)/ratio;
-
-	dc.Rectangle(mapLeft,mapTop,mapRight,mapBottom);*/
 }
 
 
@@ -96,8 +74,6 @@ void CPaintDlg::DrawMap()
 {
 	CPaintDC dc(this);
 	GetClientRect(&DrawArea);
-	//DrawArea.left -= DrawArea.bottom + 100;
-	//dc.SelectObject(&MainPen);
 	dc.MoveTo(DrawArea.left,DrawArea.top);
 	dc.LineTo(DrawArea.right,DrawArea.bottom);
 }
@@ -110,7 +86,6 @@ void CPaintDlg::DrawRobot(int x, int y, COLORREF color)
 	dc.SelectObject(Brush);
 	int side = DrawArea.bottom/n;
 	Ellipse(dc,x*side+1,y*side+1,x*side+side,y*side+side);
-	//AfxMessageBox("draw robot");
 }
 
 void CPaintDlg::DrawObject(int x, int y, int type)
@@ -133,7 +108,6 @@ void CPaintDlg::DrawObject(int x, int y, int type)
 
 void CPaintDlg::DrawRobots()
 {
-	//WaitForSingleObject(PicCounted,INFINITE);
 	Invalidate();
 	AfxGetApp()->PumpMessage();
 	OnPaint();

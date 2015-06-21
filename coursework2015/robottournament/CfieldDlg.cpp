@@ -6,7 +6,6 @@
 #include "robottournament.h"
 #include "CfieldDlg.h"
 #include "afxdialogex.h"
-#include <fstream>
 #include "math.h"
 #include <string>
 
@@ -19,7 +18,7 @@ IMPLEMENT_DYNAMIC(CfieldDlg, CDialogEx)
 	: CDialogEx(CfieldDlg::IDD, pParent)
 	, rx(0)
 	, ry(0)
-	, rE(0)
+	, rE("0")
 	, rL(0)
 	, rA(0)
 	, rP(0)
@@ -59,6 +58,11 @@ void CfieldDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT9, stepNumber);
 	DDX_Text(pDX, IDC_EDIT10, rkills);
 	DDX_Text(pDX, IDC_EDIT11, aliveRobots);
+	DDX_Control(pDX, IDC_UPBTN, m_upbutton);
+	DDX_Control(pDX, IDC_RIGHTBTN, m_rightbutton);
+	DDX_Control(pDX, IDC_DOWNBTN, m_downbutton);
+	DDX_Control(pDX, IDC_LEFTBTN, m_leftbutton);
+	DDX_Control(pDX, IDC_BUTTON2, m_lockbutton);
 }
 
 
@@ -106,7 +110,12 @@ UINT thread(LPVOID pParam)
 
 void CfieldDlg::Play()
 {
-	ofstream prot("AttacksProtocol.txt");
+	if (log)
+	{
+		prot.open("AttacksProtocol.txt", ofstream::trunc);
+		CString t = CTime::GetCurrentTime().Format("%H:%M:%S");
+		prot << t << " - ÁÈÒÂÀ ÍÀ×ÀËÀÑÜ\n";
+	}
 	while (stepNumber < paintDlg.FieldParameters.N && aliveRobots > 1)
 	{
 		stepNumber++;
@@ -248,10 +257,11 @@ void CfieldDlg::Play()
 													double P = (1-rnd)*paintDlg.robots[victim]->P*paintDlg.robots[victim]->E/paintDlg.FieldParameters.Emax;
 													paintDlg.robots[victim]->attackedBy[actingRobot] = true;	//ïèøåì, ÷òî ðîáîòû àòàêîâàëè äðóã äðóãà
 													paintDlg.robots[actingRobot]->attackedBy[victim] = true;
-													prot <<
-														paintDlg.robots[actingRobot]->name << " (x = " << curx << ", y = " << cury << ", A = " << paintDlg.robots[actingRobot]->A << ", P = " << paintDlg.robots[actingRobot]->P << ", V = " << paintDlg.robots[actingRobot]->V << ", E = " << paintDlg.robots[actingRobot]->E <<") àòàêîâàë " << 
-														paintDlg.robots[victim]->name << " (x = " << paintDlg.robots[victim]->x << ", y = " << paintDlg.robots[victim]->y << ", A = " << paintDlg.robots[victim]->A << ", P = " << paintDlg.robots[victim]->P << ", V = " << paintDlg.robots[victim]->V << ", E = " << paintDlg.robots[actingRobot]->E <<
-														") ñ RND = " << rnd;
+													if (log)
+														prot <<
+															paintDlg.robots[actingRobot]->name << " (x = " << curx << ", y = " << cury << ", A = " << paintDlg.robots[actingRobot]->A << ", P = " << paintDlg.robots[actingRobot]->P << ", V = " << paintDlg.robots[actingRobot]->V << ", E = " << paintDlg.robots[actingRobot]->E <<") àòàêîâàë " << 
+															paintDlg.robots[victim]->name << " (x = " << destx << ", y = " << desty << ", A = " << paintDlg.robots[victim]->A << ", P = " << paintDlg.robots[victim]->P << ", V = " << paintDlg.robots[victim]->V << ", E = " << paintDlg.robots[victim]->E <<
+															") ñ RND = " << rnd;
 													if (A > P)	//óäà÷íàÿ àòàêà
 													{
 														if (paintDlg.robots[victim]->newP > 0 && paintDlg.robots[victim]->P > 0)
@@ -261,7 +271,8 @@ void CfieldDlg::Play()
 														}
 														else
 															paintDlg.robots[victim]->newE -= abs(P - A)*paintDlg.FieldParameters.Emax/paintDlg.FieldParameters.Lmax;
-														prot << " - ÓÑÏÅÕ (newP = " << paintDlg.robots[victim]->newP << ", newE = " << paintDlg.robots[victim]->newE << ")\n";
+														if (log)
+															prot << " - ÓÑÏÅÕ (newP = " << paintDlg.robots[victim]->newP << ", newE = " << paintDlg.robots[victim]->newE << ")\n";
 													}
 													else    //íåóäà÷íàÿ àòàêà
 													{
@@ -272,7 +283,8 @@ void CfieldDlg::Play()
 														}
 														else
 															paintDlg.robots[actingRobot]->newE -= abs(P - A)*paintDlg.FieldParameters.Emax/paintDlg.FieldParameters.Lmax;
-														prot << " - ÍÅÓÄÀ×À (newA = " << paintDlg.robots[actingRobot]->newA << ", newE = " << paintDlg.robots[actingRobot]->newE << ")\n";
+														if (log)
+															prot << " - ÍÅÓÄÀ×À (newA = " << paintDlg.robots[actingRobot]->newA << ", newE = " << paintDlg.robots[actingRobot]->newE << ")\n";
 													}
 													if (paintDlg.robots[victim]->newE <= 0)	//ïðîâåðêà óáèéñòâà
 														paintDlg.robots[victim]->killed = true;
@@ -410,7 +422,12 @@ void CfieldDlg::Play()
 		{
 			rx = paintDlg.robots[infoLock]->x;
 			ry = paintDlg.robots[infoLock]->y;
-			rE = paintDlg.robots[infoLock]->E;
+			if (paintDlg.robots[infoLock]->alive)
+				rE.Format("%d", paintDlg.robots[infoLock]->E);
+			else if (paintDlg.robots[infoLock]->killed)
+				rE = "Óáèò";
+			else
+				rE = "Óìåð";
 			rL = paintDlg.robots[infoLock]->L;
 			rA = paintDlg.robots[infoLock]->A;
 			rP = paintDlg.robots[infoLock]->P;
@@ -468,8 +485,12 @@ void CfieldDlg::Play()
 		}
 		results += to_string(i+1) + space1 + paintDlg.robots[id]->name.GetString() + space2 + status + "   " + to_string(paintDlg.robots[id]->kills) + "           "  + to_string(paintDlg.robots[id]->points) + "\n";
 	}
-	prot << "\nÁÈÒÂÀ ÇÀÂÅÐØÅÍÀ\n" << results.c_str();
-	prot.close();
+	if (log)
+	{
+		CString t = CTime::GetCurrentTime().Format("%H:%M:%S");
+		prot << endl << t << " - ÁÈÒÂÀ ÇÀÂÅÐØÅÍÀ\n"<< results.c_str();
+		prot.close();
+	}
 	MessageBox(results.c_str(),"Ðåçóëüòàòû ðàóíäà");
 	int opt = MessageBox("Îáíîâèòü ðîáîòîâ âî âõîäíîì ñïèñêå?","Ñëåäóþùèé ðàóíä",MB_YESNO | MB_ICONQUESTION);
 	if (opt == IDYES)
@@ -507,6 +528,11 @@ void CfieldDlg::Play()
 
 void CfieldDlg::OnBnClickedButton1()
 {
+	m_upbutton.EnableWindow();
+	m_rightbutton.EnableWindow();
+	m_downbutton.EnableWindow();
+	m_leftbutton.EnableWindow();
+	m_lockbutton.EnableWindow();
 	m_StartButton.EnableWindow(0);
 	m_ListBox.AddString("Ñâîáîäíàÿ êàìåðà");
 
@@ -625,7 +651,12 @@ void CfieldDlg::OnLbnSelchangeList1()
 	{
 		rx = paintDlg.robots[infoLock]->x;
 		ry = paintDlg.robots[infoLock]->y;
-		rE = paintDlg.robots[infoLock]->E;
+		if (paintDlg.robots[infoLock]->alive)
+			rE.Format("%d", paintDlg.robots[infoLock]->E);
+		else if (paintDlg.robots[infoLock]->killed)
+			rE = "Óáèò";
+		else
+			rE = "Óìåð";
 		rL = paintDlg.robots[infoLock]->L;
 		rA = paintDlg.robots[infoLock]->A;
 		rP = paintDlg.robots[infoLock]->P;

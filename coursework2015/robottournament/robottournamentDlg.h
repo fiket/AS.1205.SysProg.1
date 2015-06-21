@@ -62,6 +62,7 @@ public:
 	double rndmax;
 	int K;
 	CButton m_DeadBonus;
+	CButton m_log;
 };
 
 
